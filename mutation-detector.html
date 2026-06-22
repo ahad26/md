@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mutation Detector - Enterprise Genome Framework</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0E0E0F;
+  --surface: #161618;
+  --surface-2: #1E1E21;
+  --surface-3: #252528;
+  --border: rgba(255,255,255,0.07);
+  --border-med: rgba(255,255,255,0.12);
+  --border-strong: rgba(255,255,255,0.18);
+  --ink: #F0EFE9;
+  --ink-2: #9E9D97;
+  --ink-3: #5C5B57;
+
+  --m1: #E84855;
+  --m1-dim: rgba(232,72,85,0.12);
+  --m1-glow: rgba(232,72,85,0.25);
+
+  --m2: #F4845F;
+  --m2-dim: rgba(244,132,95,0.12);
+  --m2-glow: rgba(244,132,95,0.25);
+
+  --m3: #F7B731;
+  --m3-dim: rgba(247,183,49,0.12);
+  --m3-glow: rgba(247,183,49,0.25);
+
+  --m4: #26C99E;
+  --m4-dim: rgba(38,201,158,0.12);
+  --m4-glow: rgba(38,201,158,0.25);
+
+  --m5: #7B6EF6;
+  --m5-dim: rgba(123,110,246,0.12);
+  --m5-glow: rgba(123,110,246,0.25);
+
+  --healthy: #26C99E;
+  --healthy-dim: rgba(38,201,158,0.1);
+  --critical: #E84855;
+  --critical-dim: rgba(232,72,85,0.1);
+
+  --radius: 10px;
+  --radius-lg: 16px;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 2px; }
+
+/* NAV */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(14,14,15,0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-brand {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  letter-spacing: 0.04em;
+}
+.nav-brand span { color: var(--ink); }
+.nav-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── LANDING ── */
+.landing {
+  min-height: calc(100vh - 54px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 40%, transparent 100%);
+  pointer-events: none;
+}
+
+.landing-scan {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--m1), transparent);
+  animation: scan 4s ease-in-out infinite;
+  opacity: 0.6;
+}
+@keyframes scan {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.landing-inner { position: relative; max-width: 600px; }
+
+.landing-mono {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--m1);
+  letter-spacing: 0.1em;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.landing-mono::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--m1);
+}
+.landing-mono::after {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--m1);
+}
+
+.landing h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 300;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+.landing h1 strong { font-weight: 600; }
+
+.landing-sub {
+  font-size: 15px;
+  color: var(--ink-2);
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+  max-width: 480px;
+}
+
+.mutation-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 2.5rem;
+}
+.m-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  border: 1px solid;
+  letter-spacing: 0.03em;
+}
+.m-pill-1 { color: var(--m1); border-color: var(--m1-glow); background: var(--m1-dim); }
+.m-pill-2 { color: var(--m2); border-color: var(--m2-glow); background: var(--m2-dim); }
+.m-pill-3 { color: var(--m3); border-color: var(--m3-glow); background: var(--m3-dim); }
+.m-pill-4 { color: var(--m4); border-color: var(--m4-glow); background: var(--m4-dim); }
+.m-pill-5 { color: var(--m5); border-color: var(--m5-glow); background: var(--m5-dim); }
+
+.btn-scan {
+  background: var(--m1);
+  color: white;
+  border: none;
+  padding: 14px 36px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  font-family: var(--mono);
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.1);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.btn-scan:hover::after { opacity: 1; }
+
+.landing-stats {
+  display: flex;
+  gap: 2.5rem;
+  justify-content: center;
+  margin-top: 2.5rem;
+}
+.stat-item { text-align: center; }
+.stat-num {
+  font-family: var(--mono);
+  font-size: 1.6rem;
+  color: var(--ink);
+  display: block;
+}
+.stat-label { font-size: 12px; color: var(--ink-3); }
+
+/* ── QUIZ ── */
+.quiz-wrap {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 3rem 2rem 6rem;
+}
+
+.mutation-header {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.mutation-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+
+.mutation-name {
+  font-size: 1.8rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.mutation-name strong { font-weight: 600; }
+
+.mutation-desc {
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.mutation-mechanism {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  border-left: 2px solid var(--border-strong);
+  padding-left: 12px;
+  line-height: 1.7;
+  font-style: italic;
+}
+
+.symptoms-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.symptom-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.symptom-card:hover { border-color: var(--border-med); }
+
+.symptom-text {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.symptom-btns {
+  display: flex;
+  gap: 8px;
+}
+.sym-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--mono);
+  transition: all 0.15s;
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.sym-btn:hover { border-color: var(--border-strong); color: var(--ink); }
+.sym-btn.yes-active {
+  border-color: var(--m1);
+  background: var(--m1-dim);
+  color: var(--m1);
+}
+.sym-btn.no-active {
+  border-color: var(--border-strong);
+  background: var(--surface-3);
+  color: var(--ink-2);
+}
+.sym-btn.maybe-active {
+  border-color: var(--m3);
+  background: var(--m3-dim);
+  color: var(--m3);
+}
+
+.quiz-progress {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2rem;
+}
+.qp-seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  transition: background 0.3s;
+}
+.qp-seg.done { background: var(--ink-3); }
+.qp-seg.active { background: var(--ink-2); }
+
+.quiz-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.btn-ghost-dark {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: var(--mono);
+  cursor: pointer;
+  color: var(--ink-2);
+  transition: all 0.15s;
+}
+.btn-ghost-dark:hover { background: var(--surface-2); color: var(--ink); }
+
+.btn-forward {
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: var(--mono);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-forward:hover { background: var(--ink-2); }
+.btn-forward:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── RESULTS ── */
+.results-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 3rem 2rem 6rem;
+}
+
+.results-top {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.results-mono {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+
+.results-title {
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+.genome-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.mutation-results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 2.5rem;
+}
+
+.mr-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.mr-card.active-mutation { border-color: var(--m-color); }
+.mr-card.active-mutation::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--m-color);
+}
+
+.mr-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.mr-card-name {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  max-width: 70%;
+}
+.mr-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.mr-score-bar {
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.mr-score-fill {
+  height: 4px;
+  border-radius: 2px;
+  transition: width 0.8s ease;
+}
+
+.mr-signal {
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.impact-section { margin-bottom: 2.5rem; }
+
+.section-mono {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.impact-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.ic-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ic-header:hover { background: var(--surface-2); }
+
+.ic-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ic-name { font-size: 14px; font-weight: 500; flex: 1; }
+.ic-severity {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.ic-arrow { color: var(--ink-3); font-size: 16px; transition: transform 0.2s; }
+.ic-arrow.open { transform: rotate(180deg); }
+
+.ic-body {
+  display: none;
+  padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.ic-body.open { display: block; }
+
+.ic-what {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.65;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.ic-symptoms-list { margin-bottom: 1rem; }
+.ic-sym-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+  padding: 5px 0;
+  line-height: 1.5;
+}
+.ic-sym-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+
+.ic-fix {
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.ic-fix-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.ic-fix-text {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.interaction-section { margin-bottom: 2.5rem; }
+.interaction-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 8px;
+}
+.int-pair {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.int-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+}
+.int-desc {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.55;
+}
+
+.priority-section { margin-bottom: 2rem; }
+.priority-list { display: flex; flex-direction: column; gap: 8px; }
+.priority-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.priority-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.priority-text { font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+.priority-text strong { color: var(--ink); font-weight: 500; }
+
+.results-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.btn-action-primary {
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  padding: 11px 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-action-primary:hover { background: var(--ink-2); }
+.btn-action-ghost {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  padding: 11px 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: var(--mono);
+  cursor: pointer;
+  color: var(--ink-2);
+  transition: all 0.15s;
+}
+.btn-action-ghost:hover { background: var(--surface-2); color: var(--ink); }
+
+@media (max-width: 580px) {
+  .mutation-results-grid { grid-template-columns: 1fr; }
+  .landing h1 { font-size: 1.8rem; }
+  .landing-stats { gap: 1.5rem; }
+}
+
+@media print {
+  body { background: white; color: black; }
+  nav, .results-actions { display: none !important; }
+  .ic-body { display: block !important; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Enterprise <span>Genome</span></div>
+  <div class="nav-tag" id="nav-tag">MUTATION DETECTOR v1.0</div>
+</nav>
+
+<!-- LANDING -->
+<div class="page active" id="page-landing">
+  <div class="landing">
+    <div class="landing-grid"></div>
+    <div class="landing-scan"></div>
+    <div class="landing-inner">
+      <div class="landing-mono">MUTATION DETECTOR</div>
+      <h1>Five patterns that <strong>quietly kill</strong> enterprise transformation</h1>
+      <p class="landing-sub">Your transformation is not failing because of poor execution. It is failing because your governance has mutated. This tool identifies which of the five mutations are active in your organization and how they interact.</p>
+
+      <div class="mutation-preview">
+        <span class="m-pill m-pill-1">Architectural Isolation</span>
+        <span class="m-pill m-pill-2">Terminal Roadmap Syndrome</span>
+        <span class="m-pill m-pill-3">Learning Suppression</span>
+        <span class="m-pill m-pill-4">Delivery Myopia</span>
+        <span class="m-pill m-pill-5">Funding Inertia</span>
+      </div>
+
+      <button class="btn-scan" onclick="startScan()">Run mutation scan</button>
+
+      <div class="landing-stats">
+        <div class="stat-item">
+          <span class="stat-num">5</span>
+          <span class="stat-label">mutations</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">25</span>
+          <span class="stat-label">symptoms</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">~6</span>
+          <span class="stat-label">minutes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="page" id="page-quiz">
+  <div class="quiz-wrap">
+    <div class="quiz-progress" id="quiz-progress"></div>
+    <div class="mutation-header" id="mutation-header"></div>
+    <div class="symptoms-label">Rate each symptom in your organization</div>
+    <div id="symptom-cards"></div>
+    <div class="quiz-nav">
+      <button class="btn-ghost-dark" id="btn-back" onclick="goBack()" style="visibility:hidden">back</button>
+      <button class="btn-forward" id="btn-forward" onclick="goForward()" disabled>next mutation &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="page" id="page-results">
+  <div class="results-wrap">
+    <div class="results-top">
+      <div class="results-mono">SCAN COMPLETE</div>
+      <h2 class="results-title" id="results-title">Mutation analysis</h2>
+      <div id="genome-status"></div>
+    </div>
+
+    <div class="section-mono">Mutation presence</div>
+    <div class="mutation-results-grid" id="mutation-results-grid"></div>
+
+    <div class="impact-section">
+      <div class="section-mono">Active mutations: detailed analysis</div>
+      <div id="impact-cards"></div>
+    </div>
+
+    <div class="interaction-section" id="interaction-section"></div>
+
+    <div class="priority-section">
+      <div class="section-mono">Repair sequence</div>
+      <div class="priority-list" id="priority-list"></div>
+    </div>
+
+    <div class="results-actions">
+      <button class="btn-action-primary" onclick="window.print()">Download report</button>
+      <button class="btn-action-ghost" onclick="restart()">Rescan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const mutations = [
+  {
+    id: "M1",
+    name: "Architectural Isolation",
+    color: "#E84855",
+    colorDim: "rgba(232,72,85,0.12)",
+    colorGlow: "rgba(232,72,85,0.25)",
+    shortDesc: "Architects work outside the delivery rhythm",
+    mechanism: "Architecture is produced in a separate cadence from delivery. By the time architecture artifacts reach teams, priorities have shifted. Architecture becomes a compliance layer rather than a delivery input.",
+    what: "This mutation occurs when Enterprise Architecture operates as a separate function with its own timelines, reviews, and outputs that rarely intersect with actual delivery cycles. The result is that architects spend time on documentation that teams ignore, and delivery teams make architectural decisions without guidance because architects are not accessible at the point of need.",
+    symptoms: [
+      "Architects attend governance meetings but are not embedded in delivery teams or planning sessions",
+      "Architecture reviews happen after teams have already built things, resulting in rework or waivers",
+      "Delivery teams make their own technical decisions and inform architecture after the fact",
+      "Architecture roadmaps exist but teams cannot name which initiative they are working on",
+      "Architects are measured on artifacts produced rather than on delivery outcomes"
+    ],
+    fix: "Embed an architect in each value stream for at least one planning cycle. Make architecture a 'just-in-time' input to PI Planning, not a quarterly deliverable.",
+    interactions: [2, 3]
+  },
+  {
+    id: "M2",
+    name: "Terminal Roadmap Syndrome",
+    color: "#F4845F",
+    colorDim: "rgba(244,132,95,0.12)",
+    colorGlow: "rgba(244,132,95,0.25)",
+    shortDesc: "Transformation is treated as a project with an end date",
+    mechanism: "Leaders plan transformation as a finite initiative. When the program ends, the governance mechanisms, architecture disciplines, and learning structures are disbanded. The enterprise reverts to its previous operating patterns within 18 months.",
+    what: "This mutation appears when transformation is owned by a program office that has a charter, a timeline, and a completion date. Once the program closes, the people who carried the transformation leave or return to business-as-usual roles, and no permanent governance structure exists to sustain the changes. The genome reverts.",
+    symptoms: [
+      "Transformation has a dedicated program with its own budget separate from BAU operations",
+      "There is a planned end date for the transformation program",
+      "Governance forums created for the transformation are distinct from normal business governance",
+      "Success is measured by program completion rather than by sustained capability improvement",
+      "Previous transformation programs delivered outputs but the organization reverted to old behavior within 2 years"
+    ],
+    fix: "Transformation governance must merge with permanent business governance before the program ends. Create a Capability Performance Review forum that outlasts any program.",
+    interactions: [0, 4]
+  },
+  {
+    id: "M3",
+    name: "Learning Suppression",
+    color: "#F7B731",
+    colorDim: "rgba(247,183,49,0.12)",
+    colorGlow: "rgba(247,183,49,0.25)",
+    shortDesc: "New information is treated as bad news",
+    mechanism: "The enterprise has developed cultural and structural antibodies against evidence that contradicts current plans. Leaders treat data that challenges committed direction as a threat rather than an input. Safe-to-fail experiments are designed to confirm rather than to test.",
+    what: "This mutation is often invisible because organizations believe they have learning mechanisms. Post-mortems exist. Lessons learned are captured. But the information is not acted on. Roadmaps do not change when delivery evidence suggests they should. Investment decisions are not revised when capability data shows poor returns. The learning loop has been cut.",
+    symptoms: [
+      "Post-mortems are conducted but their findings do not change the next program's approach",
+      "A delivery team that raises evidence challenging the current roadmap is asked to 'stay in their lane'",
+      "Safe-to-fail experiments are not run; the organization prefers detailed upfront design before building",
+      "The response to a failed initiative is to replace the team rather than to revise the approach",
+      "Architecture and roadmaps have not changed in the last 12 months despite significant delivery learning"
+    ],
+    fix: "Institute a mandatory Architecture Decision Record process where every sprint review can trigger a roadmap change. Make 'updating the roadmap based on evidence' a KPI for architects and program leads.",
+    interactions: [0, 3]
+  },
+  {
+    id: "M4",
+    name: "Delivery Myopia",
+    color: "#26C99E",
+    colorDim: "rgba(38,201,158,0.12)",
+    colorGlow: "rgba(38,201,158,0.25)",
+    shortDesc: "Teams optimize for velocity while losing sight of capability",
+    mechanism: "Delivery teams are measured on output, not outcomes. Velocity, story points, and sprint completion become the primary success metrics. Teams become expert at delivering features while the business becomes no more capable of achieving its strategic objectives.",
+    what: "This mutation appears when agile delivery is implemented as a better way to build features, rather than as a way to improve organizational capability. Teams deliver on time and on budget. Product owners prioritize backlogs efficiently. But nobody is connecting the daily work to the capability model. The enterprise gets faster at the wrong things.",
+    symptoms: [
+      "Delivery teams measure success by sprint velocity and feature delivery, not capability improvement",
+      "Product owners cannot describe which business capability their backlog is building toward",
+      "The portfolio is organized around projects and features, not capabilities",
+      "Business stakeholders measure transformation success by go-live dates, not capability maturity",
+      "Teams have never been asked to report on which capability their work improved last quarter"
+    ],
+    fix: "Reframe every team's mission as capability improvement, not feature delivery. Add a 'capability impact' field to every epic. Review capability metrics quarterly alongside delivery metrics.",
+    interactions: [0, 2]
+  },
+  {
+    id: "M5",
+    name: "Funding Inertia",
+    color: "#7B6EF6",
+    colorDim: "rgba(123,110,246,0.12)",
+    colorGlow: "rgba(123,110,246,0.25)",
+    shortDesc: "Money keeps flowing to old priorities after evidence changes",
+    mechanism: "Annual budgets create commitment structures that outlast the validity of their original assumptions. By the time capability data shows an investment is underperforming, the budget cycle has already allocated resources for another 12 months. Political friction makes reallocation feel riskier than continuing.",
+    what: "This mutation is structural and cultural. It is structural because annual budgeting processes lock funding before evidence is available. It is cultural because stopping or redirecting investment in a committed program is interpreted as failure by the people associated with it. The result is that failing initiatives stay funded while successful experiments cannot scale.",
+    symptoms: [
+      "The annual budget cycle happens before capability performance data is available to inform it",
+      "A program that is clearly underperforming continues to receive full funding because stopping it is politically difficult",
+      "Investment reallocation during the year requires executive approval and rarely happens",
+      "Finance reviews spending against budget but does not review spending against capability outcomes",
+      "New evidence about what is working has never caused a funded program to be stopped or significantly reduced"
+    ],
+    fix: "Introduce a quarterly capability-based investment review. Reserve 15 to 20 percent of transformation budget as a reallocation pool. Link funding continuation to capability metric progress, not program schedule.",
+    interactions: [1, 3]
+  }
+];
+
+const interactionMap = [
+  { pair: [0, 2], desc: "Architectural Isolation and Learning Suppression together mean that architecture does not receive delivery feedback and cannot update itself. The roadmap becomes permanently stale." },
+  { pair: [0, 3], desc: "Architectural Isolation and Delivery Myopia together mean delivery teams build without architectural guidance and without capability goals. They go fast in the wrong direction." },
+  { pair: [1, 4], desc: "Terminal Roadmap Syndrome and Funding Inertia together ensure that transformation ends on paper while the budget commitments outlive the program. Nothing changes but nobody stops spending." },
+  { pair: [2, 3], desc: "Learning Suppression and Delivery Myopia together produce an organization that delivers quickly, learns nothing, and cannot change direction. High velocity in the wrong direction." },
+  { pair: [1, 2], desc: "Terminal Roadmap Syndrome and Learning Suppression together mean the program runs to its planned end regardless of what evidence emerges during delivery. The genome never gets to update." }
+];
+
+let currentMutation = 0;
+let responses = Array(5).fill(null).map(() => Array(5).fill(null));
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function startScan() {
+  showPage('page-quiz');
+  renderQuizProgress();
+  renderMutation();
+}
+
+function renderQuizProgress() {
+  const container = document.getElementById('quiz-progress');
+  container.innerHTML = mutations.map((_, i) => {
+    const cls = i < currentMutation ? 'done' : i === currentMutation ? 'active' : '';
+    return `<div class="qp-seg ${cls}"></div>`;
+  }).join('');
+}
+
+function renderMutation() {
+  const m = mutations[currentMutation];
+  document.getElementById('mutation-header').innerHTML = `
+    <div class="mutation-id" style="color:${m.color}">${m.id} / ${currentMutation + 1} of ${mutations.length}</div>
+    <div class="mutation-name"><strong>${m.name}</strong></div>
+    <div class="mutation-desc">${m.shortDesc}</div>
+    <div class="mutation-mechanism">${m.mechanism}</div>
+  `;
+
+  document.getElementById('symptom-cards').innerHTML = m.symptoms.map((sym, si) => `
+    <div class="symptom-card">
+      <div class="symptom-text">${sym}</div>
+      <div class="symptom-btns">
+        <button class="sym-btn ${responses[currentMutation][si] === 'yes' ? 'yes-active' : ''}"
+          onclick="setResponse(${si}, 'yes')">yes &mdash; we see this</button>
+        <button class="sym-btn ${responses[currentMutation][si] === 'maybe' ? 'maybe-active' : ''}"
+          onclick="setResponse(${si}, 'maybe')">sometimes</button>
+        <button class="sym-btn ${responses[currentMutation][si] === 'no' ? 'no-active' : ''}"
+          onclick="setResponse(${si}, 'no')">no &mdash; not us</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('btn-back').style.visibility = currentMutation > 0 ? 'visible' : 'hidden';
+  document.getElementById('btn-forward').textContent = currentMutation === 4 ? 'see results →' : 'next mutation →';
+  checkForward();
+  renderQuizProgress();
+}
+
+function setResponse(si, val) {
+  responses[currentMutation][si] = val;
+  renderMutation();
+}
+
+function checkForward() {
+  const allAnswered = responses[currentMutation].every(r => r !== null);
+  document.getElementById('btn-forward').disabled = !allAnswered;
+}
+
+function goForward() {
+  if (currentMutation < 4) {
+    currentMutation++;
+    renderMutation();
+    window.scrollTo(0, 0);
+  } else {
+    showResults();
+  }
+}
+
+function goBack() {
+  if (currentMutation > 0) {
+    currentMutation--;
+    renderMutation();
+    window.scrollTo(0, 0);
+  }
+}
+
+function getMutationScore(mi) {
+  const r = responses[mi];
+  return r.reduce((sum, v) => sum + (v === 'yes' ? 2 : v === 'maybe' ? 1 : 0), 0);
+}
+
+function getMutationLevel(score) {
+  if (score >= 7) return { label: 'ACTIVE', severity: 'critical' };
+  if (score >= 4) return { label: 'POSSIBLE', severity: 'warn' };
+  return { label: 'LOW SIGNAL', severity: 'clear' };
+}
+
+function showResults() {
+  showPage('page-results');
+
+  const scores = mutations.map((_, i) => getMutationScore(i));
+  const activeMutations = scores.map((s, i) => ({ s, i, level: getMutationLevel(s) })).filter(x => x.level.severity !== 'clear');
+  const criticalCount = scores.filter(s => s >= 7).length;
+  const totalScore = scores.reduce((a, b) => a + b, 0);
+
+  let statusColor, statusText;
+  if (criticalCount >= 3) {
+    statusColor = '#E84855';
+    statusText = `${criticalCount} active mutations detected. Transformation is structurally compromised.`;
+  } else if (criticalCount >= 1 || activeMutations.length >= 2) {
+    statusColor = '#F7B731';
+    statusText = `${activeMutations.length} mutations present. Transformation is progressing but losing integrity.`;
+  } else {
+    statusColor = '#26C99E';
+    statusText = 'Mutation load is low. Governance is mostly intact.';
+  }
+
+  document.getElementById('genome-status').innerHTML = `
+    <div class="genome-status" style="color:${statusColor};border-color:${statusColor}40;background:${statusColor}10">
+      <span style="width:6px;height:6px;border-radius:50%;background:${statusColor};display:inline-block"></span>
+      ${statusText}
+    </div>`;
+
+  document.getElementById('mutation-results-grid').innerHTML = mutations.map((m, i) => {
+    const score = scores[i];
+    const level = getMutationLevel(score);
+    const pct = Math.round((score / 10) * 100);
+    const isActive = level.severity !== 'clear';
+    const badgeColor = level.severity === 'critical' ? m.color : level.severity === 'warn' ? '#F7B731' : 'var(--ink-3)';
+    const badgeBg = level.severity === 'critical' ? m.colorDim : level.severity === 'warn' ? 'rgba(247,183,49,0.12)' : 'var(--surface-3)';
+
+    return `<div class="mr-card ${isActive ? 'active-mutation' : ''}" style="--m-color:${m.color}">
+      <div class="mr-card-top">
+        <div class="mr-card-name">${m.name}</div>
+        <div class="mr-badge" style="color:${badgeColor};background:${badgeBg};border-color:${badgeColor}40">${level.label}</div>
+      </div>
+      <div class="mr-score-bar">
+        <div class="mr-score-fill" style="width:${pct}%;background:${isActive ? m.color : 'var(--ink-3)'}"></div>
+      </div>
+      <div class="mr-signal">${m.shortDesc}</div>
+    </div>`;
+  }).join('');
+
+  const activeSorted = scores
+    .map((s, i) => ({ s, i }))
+    .filter(x => x.s >= 4)
+    .sort((a, b) => b.s - a.s);
+
+  document.getElementById('impact-cards').innerHTML = activeSorted.length === 0
+    ? `<div style="font-size:14px;color:var(--ink-3);padding:1rem 0">No active mutations detected at significant levels.</div>`
+    : activeSorted.map(({ s, i }) => {
+        const m = mutations[i];
+        const level = getMutationLevel(s);
+        const sevColor = level.severity === 'critical' ? m.color : '#F7B731';
+        const confirmedSymptoms = responses[i].map((r, si) => ({ r, si })).filter(x => x.r === 'yes' || x.r === 'maybe');
+
+        return `<div class="impact-card">
+          <div class="ic-header" onclick="toggleImpact(${i})">
+            <div class="ic-dot" style="background:${m.color}"></div>
+            <div class="ic-name">${m.name}</div>
+            <div class="ic-severity" style="color:${sevColor}">${level.label}</div>
+            <div class="ic-arrow" id="ic-arrow-${i}">&#8964;</div>
+          </div>
+          <div class="ic-body" id="ic-body-${i}">
+            <div class="ic-what">${m.what}</div>
+            <div class="ic-symptoms-list">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Symptoms confirmed in your org</div>
+              ${confirmedSymptoms.map(({ r, si }) => `
+                <div class="ic-sym-item">
+                  <div class="ic-sym-dot" style="background:${r === 'yes' ? m.color : '#F7B731'}"></div>
+                  <span>${m.symptoms[si]}</span>
+                </div>`).join('')}
+            </div>
+            <div class="ic-fix">
+              <div class="ic-fix-label">Repair action</div>
+              <div class="ic-fix-text">${m.fix}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+  if (activeSorted.length > 0) {
+    setTimeout(() => toggleImpact(activeSorted[0].i), 200);
+  }
+
+  const activeIndices = new Set(activeSorted.map(x => x.i));
+  const relevantInteractions = interactionMap.filter(({ pair }) =>
+    pair.every(p => activeIndices.has(p))
+  );
+
+  const intSection = document.getElementById('interaction-section');
+  if (relevantInteractions.length > 0) {
+    intSection.innerHTML = `
+      <div class="section-mono">Mutation interactions</div>
+      ${relevantInteractions.map(({ pair, desc }) => `
+        <div class="interaction-card">
+          <div class="int-pair">
+            <span class="int-tag" style="color:${mutations[pair[0]].color};border-color:${mutations[pair[0]].colorGlow}">${mutations[pair[0]].id}</span>
+            <span style="color:var(--ink-3);font-size:12px">+</span>
+            <span class="int-tag" style="color:${mutations[pair[1]].color};border-color:${mutations[pair[1]].colorGlow}">${mutations[pair[1]].id}</span>
+          </div>
+          <div class="int-desc">${desc}</div>
+        </div>`).join('')}`;
+  } else {
+    intSection.innerHTML = '';
+  }
+
+  const repairSequence = activeSorted.map(({ s, i }, rank) => {
+    const m = mutations[i];
+    return `<div class="priority-item">
+      <div class="priority-num">0${rank + 1}</div>
+      <div class="priority-text"><strong style="color:${m.color}">${m.name}.</strong> ${m.fix}</div>
+    </div>`;
+  });
+
+  document.getElementById('priority-list').innerHTML = repairSequence.length > 0
+    ? repairSequence.join('')
+    : `<div style="font-size:14px;color:var(--ink-3);padding:1rem 0">No significant mutations detected. Focus on sustaining current governance practices.</div>`;
+}
+
+function toggleImpact(i) {
+  const body = document.getElementById(`ic-body-${i}`);
+  const arrow = document.getElementById(`ic-arrow-${i}`);
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+function restart() {
+  currentMutation = 0;
+  responses = Array(5).fill(null).map(() => Array(5).fill(null));
+  showPage('page-landing');
+}
+</script>
+</body>
+</html>
